@@ -15,6 +15,10 @@ interface Student {
   name: string
   firstName?: string
   fullName?: string
+  full_name?: string
+  class_name?: string
+  counter?: number
+  picked_history?: string[]
 }
 
 const defaultStudentNames = [
@@ -32,10 +36,11 @@ const processStudentNames = (studentList: Student[]): Student[] => {
   // Extract first names and track duplicates
   const firstNameCounts: { [key: string]: number } = {}
   const firstNames = studentList.map((student) => {
-    const parts = student.name.trim().split(/\s+/)
+    const fullName = student.full_name || student.name || ""
+    const parts = fullName.trim().split(/\s+/)
     const firstName = parts[0]
     firstNameCounts[firstName] = (firstNameCounts[firstName] || 0) + 1
-    return { ...student, firstName, fullName: student.name }
+    return { ...student, firstName, fullName }
   })
 
   // Process names based on duplicates
@@ -103,8 +108,8 @@ export default function StudentFortuneWheel() {
         const classStudents = data.students || []
 
         if (Array.isArray(classStudents) && classStudents.length > 0) {
-          const newStudentNames = classStudents.map((student) =>
-            typeof student === "string" ? student : student.name || student.toString(),
+          const newStudentNames = classStudents.map(
+            (student) => student.full_name || student.name || student.toString(),
           )
           setInputText(newStudentNames.join("\n"))
         }
@@ -129,52 +134,33 @@ export default function StudentFortuneWheel() {
 
     setIsLoading(true)
     try {
-      const text = await file.text()
-      let jsonData
+      const formData = new FormData()
+      formData.append("file", file)
 
-      if (file.name.endsWith(".csv")) {
-        const lines = text.split("\n").filter((line) => line.trim() !== "")
-        const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""))
-
-        const students = lines.slice(1).map((line, index) => {
-          const values = line.split(",").map((v) => v.trim().replace(/"/g, ""))
-          const student: any = { id: index + 1 }
-
-          headers.forEach((header, i) => {
-            student[header] = values[i] || ""
-          })
-
-          return student
-        })
-
-        jsonData = { students }
-      } else {
-        jsonData = JSON.parse(text)
-      }
-
-      const response = await fetch("/api/students", {
+      const response = await fetch("/api/students/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(jsonData),
+        body: formData,
       })
 
       if (response.ok) {
         const result = await response.json()
+        console.log("Backend response:", result)
+
         if (result.students && Array.isArray(result.students)) {
-          const newStudentNames = result.students.map((student: any) =>
-            typeof student === "string" ? student : student.name || student.toString(),
+          const newStudentNames = result.students.map(
+            (student: any) => student.full_name || student.name || student.toString(),
           )
           setInputText(newStudentNames.join("\n"))
+          alert(result.message || "Plik został pomyślnie przesłany")
         }
       } else {
-        console.error("Failed to upload students:", response.statusText)
-        alert("Błąd podczas wysyłania danych do serwera")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Failed to upload students:", response.statusText, errorData)
+        alert(errorData.detail || "Błąd podczas wysyłania danych do serwera")
       }
     } catch (error) {
       console.error("Error processing file:", error)
-      alert("Błąd podczas przetwarzania pliku JSON/CSV")
+      alert("Błąd podczas przetwarzania pliku")
     } finally {
       setIsLoading(false)
       event.target.value = ""
@@ -425,7 +411,7 @@ export default function StudentFortuneWheel() {
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <label htmlFor="json-upload" className="block text-sm font-medium text-foreground mb-2">
-                      Upload JSON File
+                      Upload Student File
                     </label>
                     <div className="relative">
                       <input
@@ -449,7 +435,8 @@ export default function StudentFortuneWheel() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Select a JSON or CSV file with student data to upload to the backend and load into the wheel.
+                  Select a JSON or CSV file with student data. The backend will normalize the data and handle both
+                  Polish and English field names (imie/nazwisko, full_name, klasa/class_name).
                 </p>
               </div>
             </CardContent>
