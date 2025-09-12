@@ -444,7 +444,7 @@ export default function StudentFortuneWheel() {
         </div>
       </div>
 
-      {/* Winner Popup Dialog */}
+      {/* Winner Popup Dialog  */}
       <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
