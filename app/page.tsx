@@ -355,11 +355,42 @@ export default function StudentFortuneWheel() {
                 Enter a class name and click "Załącz" to load students from the JSON endpoint. Students will replace the
                 current list.
               </p>
+
+              <div className="mt-6 pt-6 border-t border-border">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label htmlFor="json-upload" className="block text-sm font-medium text-foreground mb-2">
+                      Upload JSON File
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="json-upload"
+                        type="file"
+                        accept=".json"
+                        onChange={handleFileUpload}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <Button
+                        onClick={() => document.getElementById("json-upload")?.click()}
+                        disabled={isLoading}
+                        variant="outline"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {isLoading ? "Uploading..." : "Wybierz plik JSON"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Select a JSON file with student data to upload to the backend and load into the wheel.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
-
       {/* Winner Popup Dialog */}
       <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
         <DialogContent className="sm:max-w-md">
