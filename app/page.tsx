@@ -122,17 +122,36 @@ export default function StudentFortuneWheel() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (!file.name.endsWith(".json")) {
-      alert("Proszę wybrać plik JSON")
+    if (!file.name.endsWith(".json") && !file.name.endsWith(".csv")) {
+      alert("Proszę wybrać plik JSON lub CSV")
       return
     }
 
     setIsLoading(true)
     try {
       const text = await file.text()
-      const jsonData = JSON.parse(text)
+      let jsonData
 
-      // Send JSON data to backend
+      if (file.name.endsWith(".csv")) {
+        const lines = text.split("\n").filter((line) => line.trim() !== "")
+        const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""))
+
+        const students = lines.slice(1).map((line, index) => {
+          const values = line.split(",").map((v) => v.trim().replace(/"/g, ""))
+          const student: any = { id: index + 1 }
+
+          headers.forEach((header, i) => {
+            student[header] = values[i] || ""
+          })
+
+          return student
+        })
+
+        jsonData = { students }
+      } else {
+        jsonData = JSON.parse(text)
+      }
+
       const response = await fetch("/api/students", {
         method: "POST",
         headers: {
@@ -155,10 +174,9 @@ export default function StudentFortuneWheel() {
       }
     } catch (error) {
       console.error("Error processing file:", error)
-      alert("Błąd podczas przetwarzania pliku JSON")
+      alert("Błąd podczas przetwarzania pliku JSON/CSV")
     } finally {
       setIsLoading(false)
-      // Reset file input
       event.target.value = ""
     }
   }
@@ -413,7 +431,7 @@ export default function StudentFortuneWheel() {
                       <input
                         id="json-upload"
                         type="file"
-                        accept=".json"
+                        accept=".json,.csv"
                         onChange={handleFileUpload}
                         disabled={isLoading}
                         className="hidden"
@@ -425,13 +443,13 @@ export default function StudentFortuneWheel() {
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        {isLoading ? "Uploading..." : "Wybierz plik JSON"}
+                        {isLoading ? "Uploading..." : "Wybierz plik JSON/CSV"}
                       </Button>
                     </div>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Select a JSON file with student data to upload to the backend and load into the wheel.
+                  Select a JSON or CSV file with student data to upload to the backend and load into the wheel.
                 </p>
               </div>
             </CardContent>
