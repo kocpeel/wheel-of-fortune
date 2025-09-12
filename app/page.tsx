@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -113,6 +115,51 @@ export default function StudentFortuneWheel() {
       console.error("Error loading students:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.endsWith(".json")) {
+      alert("Proszę wybrać plik JSON")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const text = await file.text()
+      const jsonData = JSON.parse(text)
+
+      // Send JSON data to backend
+      const response = await fetch("/api/students", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(jsonData),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.students && Array.isArray(result.students)) {
+          const newStudentNames = result.students.map((student: any) =>
+            typeof student === "string" ? student : student.name || student.toString(),
+          )
+          setInputText(newStudentNames.join("\n"))
+        }
+      } else {
+        console.error("Failed to upload students:", response.statusText)
+        alert("Błąd podczas wysyłania danych do serwera")
+      }
+    } catch (error) {
+      console.error("Error processing file:", error)
+      alert("Błąd podczas przetwarzania pliku JSON")
+    } finally {
+      setIsLoading(false)
+      // Reset file input
+      event.target.value = ""
     }
   }
 
@@ -355,6 +402,38 @@ export default function StudentFortuneWheel() {
                 Enter a class name and click "Załącz" to load students from the JSON endpoint. Students will replace the
                 current list.
               </p>
+
+              <div className="mt-6 pt-6 border-t border-border">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label htmlFor="json-upload" className="block text-sm font-medium text-foreground mb-2">
+                      Upload JSON File
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="json-upload"
+                        type="file"
+                        accept=".json"
+                        onChange={handleFileUpload}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <Button
+                        onClick={() => document.getElementById("json-upload")?.click()}
+                        disabled={isLoading}
+                        variant="outline"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {isLoading ? "Uploading..." : "Wybierz plik JSON"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Select a JSON file with student data to upload to the backend and load into the wheel.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
