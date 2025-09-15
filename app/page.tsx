@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { RotateCcw, Trophy, Download, Moon, Sun, PartyPopper } from "lucide-react"
+import Link from "next/link"
 
 interface Student {
   id: string
@@ -221,6 +222,19 @@ export default function StudentFortuneWheel() {
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-2">Student Selection Wheel</h1>
           <p className="text-muted-foreground">Click the wheel to randomly select a student!</p>
+        </div>
+
+        <div className="flex justify-center gap-4 mb-8">
+          <Link href="/studentsList">
+            <Button variant="outline" className="px-6">
+              Lista uczniów
+            </Button>
+          </Link>
+          <Link href="/">
+            <Button className="px-6 bg-blue-600 text-white hover:bg-blue-700">
+              Koło fortuny
+            </Button>
+          </Link>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
