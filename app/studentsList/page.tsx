@@ -1,89 +1,84 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Shuffle, Plus, ArrowDown, Trash2 } from "lucide-react"
-import Link from "next/link"
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, SkipForward, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 interface Student {
-  id: number
-  name: string
+  id: number;
+  name: string;
+}
+
+interface HistoryEntry {
+  id: number;
+  name: string;
+  count: number;
 }
 
 export default function StudentQueue() {
-  const [students, setStudents] = useState<Student[]>([
+  const [queue, setQueue] = useState<Student[]>([
     { id: 1, name: "Anna Kowalska" },
     { id: 2, name: "Jan Nowak" },
     { id: 3, name: "Maria Wiśniewska" },
     { id: 4, name: "Piotr Wójcik" },
     { id: 5, name: "Katarzyna Kowalczyk" },
-  ])
-  const [newStudentName, setNewStudentName] = useState("")
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [isShuffling, setIsShuffling] = useState(false)
+  ]);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [newStudentName, setNewStudentName] = useState("");
+
+  const nextStudent = useMemo(
+    () => (queue.length > 0 ? queue[0] : null),
+    [queue]
+  );
 
   const addStudent = () => {
-    if (newStudentName.trim()) {
-      const newStudent: Student = {
-        id: Date.now(),
-        name: newStudentName.trim(),
-      }
-      setStudents([...students, newStudent])
-      setNewStudentName("")
-    }
-  }
+    if (!newStudentName.trim()) return;
+    const newStudent: Student = { id: Date.now(), name: newStudentName.trim() };
+    setQueue((prev) => [...prev, newStudent]);
+    setNewStudentName("");
+  };
 
-  const removeStudent = (id: number) => {
-    setStudents(students.filter((student) => student.id !== id))
-    if (selectedStudent?.id === id) {
-      setSelectedStudent(null)
-    }
-  }
+  const removeFromQueue = (id: number) => {
+    setQueue((prev) => prev.filter((s) => s.id !== id));
+  };
 
-  const shuffleStudents = () => {
-    setIsShuffling(true)
-    setTimeout(() => {
-      const shuffled = [...students].sort(() => Math.random() - 0.5)
-      setStudents(shuffled)
-      setIsShuffling(false)
-    }, 500)
-  }
+  const skipNext = () => {
+    if (queue.length === 0) return;
+    const [first, ...rest] = queue;
+    setQueue([...rest, first]);
+  };
 
-  const drawRandomStudent = () => {
-    if (students.length > 0) {
-      const randomIndex = Math.floor(Math.random() * students.length)
-      setSelectedStudent(students[randomIndex])
-    }
-  }
+  const plusNext = () => {
+    if (queue.length === 0) return;
+    const [first, ...rest] = queue;
+    setQueue([...rest, first]);
+    setHistory((prev) => {
+      const idx = prev.findIndex((h) => h.id === first.id);
+      if (idx === -1)
+        return [...prev, { id: first.id, name: first.name, count: 1 }];
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], count: updated[idx].count + 1 };
+      return updated;
+    });
+  };
 
-  const moveToBottom = () => {
-    if (selectedStudent) {
-      const filteredStudents = students.filter((s) => s.id !== selectedStudent.id)
-      setStudents([...filteredStudents, selectedStudent])
-      setSelectedStudent(null)
-    }
-  }
-
-  const moveStudentToBottom = (studentId: number) => {
-    const studentToMove = students.find((s) => s.id === studentId)
-    if (studentToMove) {
-      const filteredStudents = students.filter((s) => s.id !== studentId)
-      setStudents([...filteredStudents, studentToMove])
-      if (selectedStudent?.id === studentId) {
-        setSelectedStudent(null)
-      }
-    }
-  }
+  const plusString = (count: number) => "+".repeat(Math.max(0, count));
 
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Losowanie Kolejki Uczniów</h1>
-          <p className="text-muted-foreground mb-3">Zarządzaj listą uczniów i losuj kolejność</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Kolejka uczniów (playlista)
+          </h1>
+          <p className="text-muted-foreground mb-3">
+            Dodawaj/usuwaj uczniów. Lista zapętla się. Plus lub Skip dla
+            następnego.
+          </p>
         </div>
 
         <div className="flex justify-center gap-4 mb-8">
@@ -100,12 +95,11 @@ export default function StudentQueue() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
-          {/* Dodawanie ucznia */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
-                Dodaj Ucznia
+                Dodaj ucznia do playlisty
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -114,7 +108,7 @@ export default function StudentQueue() {
                   placeholder="Imię i nazwisko ucznia"
                   value={newStudentName}
                   onChange={(e) => setNewStudentName(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addStudent()}
+                  onKeyDown={(e) => e.key === "Enter" && addStudent()}
                 />
                 <Button onClick={addStudent} disabled={!newStudentName.trim()}>
                   <Plus className="h-4 w-4" />
@@ -123,112 +117,136 @@ export default function StudentQueue() {
             </CardContent>
           </Card>
 
-          {/* Losowanie */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shuffle className="h-5 w-5" />
-                Losowanie
-              </CardTitle>
+              <CardTitle>Panel sterowania następnym</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex gap-2">
-                <Button onClick={drawRandomStudent} disabled={students.length === 0} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
-                  Wylosuj Ucznia
-                </Button>
-                <Button onClick={shuffleStudents} variant="outline" disabled={isShuffling || students.length === 0}>
-                  <Shuffle className={`h-4 w-4 ${isShuffling ? "animate-spin" : ""}`} />
-                </Button>
-              </div>
-
-              {selectedStudent && (
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              {nextStudent ? (
+                <div className="p-4 bg-muted rounded-lg border border-border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-green-600 dark:text-green-400 font-medium">Wylosowany uczeń:</p>
-                      <p className="text-lg font-bold text-green-800 dark:text-green-200">{selectedStudent.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Następny uczeń:
+                      </p>
+                      <p className="text-lg font-bold text-foreground">
+                        {nextStudent.name}
+                      </p>
                     </div>
-                    <Button
-                      onClick={moveToBottom}
-                      size="sm"
-                      variant="outline"
-                      className="flex items-center gap-1 bg-transparent"
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                      Na dół
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={plusNext}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Plus
+                      </Button>
+                      <Button onClick={skipNext} variant="outline">
+                        <SkipForward className="h-4 w-4 mr-1" />
+                        Skip
+                      </Button>
+                    </div>
                   </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Brak uczniów w kolejce
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Lista uczniów */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Lista Uczniów</span>
-              <Badge variant="secondary">
-                {students.length} {students.length === 1 ? "uczeń" : "uczniów"}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {students.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Brak uczniów na liście</p>
-                <p className="text-sm">Dodaj pierwszego ucznia powyżej</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {students.map((student, index) => (
-                  <div
-                    key={student.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                      selectedStudent?.id === student.id
-                        ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                        : "bg-muted border-border hover:bg-muted/70"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="w-8 h-8 rounded-full flex items-center justify-center">
-                        {index + 1}
-                      </Badge>
-                      <span className="font-medium text-foreground">{student.name}</span>
-                      {selectedStudent?.id === student.id && (
-                        <Badge className="bg-green-500 hover:bg-green-600 text-white">Wylosowany</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {index === 0 && (
+        <div className="grid lg:grid-cols-2 gap-8 items-start mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Playlista (kolejka)</span>
+                <Badge variant="secondary">
+                  {queue.length} {queue.length === 1 ? "uczeń" : "uczniów"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {queue.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Brak uczniów na liście</p>
+                  <p className="text-sm">Dodaj pierwszego ucznia powyżej</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {queue.map((student, index) => (
+                    <div
+                      key={student.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                        index === 0
+                          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                          : "bg-muted border-border hover:bg-muted/70"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Badge
+                          variant="outline"
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                        >
+                          {index + 1}
+                        </Badge>
+                        <span className="font-medium text-foreground">
+                          {student.name}
+                        </span>
+                        {index === 0 && (
+                          <Badge className="bg-blue-600 hover:bg-blue-700 text-white">
+                            Następny
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
                         <Button
-                          onClick={() => moveStudentToBottom(student.id)}
+                          onClick={() => removeFromQueue(student.id)}
                           size="sm"
                           variant="ghost"
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                          title="Przenieś na dół"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          title="Usuń ucznia"
                         >
-                          <ArrowDown className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
-                      <Button
-                        onClick={() => removeStudent(student.id)}
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        title="Usuń ucznia"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ci, którzy już byli</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {history.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Jeszcze nikt nie dostał plusa
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {history.map((h) => (
+                    <div
+                      key={h.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-muted"
+                    >
+                      <span className="font-medium text-foreground">
+                        {h.name}
+                      </span>
+                      <Badge className="bg-green-600 hover:bg-green-700 text-white">
+                        {plusString(h.count)}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  )
+  );
 }
