@@ -72,13 +72,7 @@ export default function StudentQueue() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Kolejka uczniów (playlista)
-          </h1>
-          <p className="text-muted-foreground mb-3">
-            Dodawaj/usuwaj uczniów. Lista zapętla się. Plus lub Skip dla
-            następnego.
-          </p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Playlista</h1>
         </div>
 
         <div className="flex justify-center gap-4 mb-8">

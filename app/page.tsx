@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { RotateCcw, Trophy, Download, Moon, Sun, PartyPopper } from "lucide-react"
+import { RotateCcw, Trophy, Download, PartyPopper } from "lucide-react"
 import Link from "next/link"
 
 interface Student {
@@ -77,7 +77,6 @@ export default function StudentFortuneWheel() {
   const [className, setClassName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const wheelRef = useRef<HTMLDivElement>(null)
-  const [isDarkMode, setIsDarkMode] = useState(true)
 
   useEffect(() => {
     const lines = inputText.split("\n").filter((line) => line.trim() !== "")
@@ -89,13 +88,6 @@ export default function StudentFortuneWheel() {
     setStudents(processedStudents)
   }, [inputText])
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [isDarkMode])
 
   const loadStudentsFromClass = async () => {
     if (!className.trim()) return
@@ -214,12 +206,6 @@ export default function StudentFortuneWheel() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <div></div>
-            <Button onClick={() => setIsDarkMode(!isDarkMode)} variant="outline" size="sm" className="ml-auto">
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
-          </div>
           <h1 className="text-4xl font-bold text-foreground mb-2">Student Selection Wheel</h1>
           <p className="text-muted-foreground">Click the wheel to randomly select a student!</p>
         </div>
