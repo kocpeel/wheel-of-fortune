@@ -123,7 +123,7 @@ export default function StudentQueue() {
             </CardHeader>
             <CardContent className="space-y-3">
               {nextStudent ? (
-                <div className="p-4 bg-muted rounded-lg border border-border">
+                <div className="p-4 bg-muted dark:bg-muted/30 rounded-lg border border-border dark:border-border/60">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">
@@ -180,7 +180,7 @@ export default function StudentQueue() {
                       className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
                         index === 0
                           ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-                          : "bg-muted border-border hover:bg-muted/70"
+                          : "bg-muted dark:bg-muted/30 border-border dark:border-border/60 hover:bg-muted/70 dark:hover:bg-muted/40"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ export default function StudentQueue() {
                   {history.map((h) => (
                     <div
                       key={h.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-muted"
+                      className="flex items-center justify-between p-3 rounded-lg border border-border dark:border-border/60 bg-muted dark:bg-muted/30"
                     >
                       <span className="font-medium text-foreground">
                         {h.name}
