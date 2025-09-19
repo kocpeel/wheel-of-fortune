@@ -1,25 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { RotateCcw, Trophy, Download, PartyPopper } from "lucide-react"
-import Link from "next/link"
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RotateCcw, Trophy, Download, PartyPopper } from "lucide-react";
+import Link from "next/link";
 
 interface Student {
-  id: string
-  name: string
-  firstName?: string
-  fullName?: string
-  full_name?: string
-  class_name?: string
-  counter?: number
-  picked_history?: string[]
+  id: string;
+  name: string;
+  firstName?: string;
+  fullName?: string;
+  full_name?: string;
+  class_name?: string;
+  counter?: number;
+  picked_history?: string[];
 }
 
 const defaultStudentNames = [
@@ -31,165 +36,174 @@ const defaultStudentNames = [
   "Tomasz Lewandowski",
   "Agnieszka Wójcik",
   "Michał Kamiński",
-]
+];
 
 const processStudentNames = (studentList: Student[]): Student[] => {
   // Extract first names and track duplicates
-  const firstNameCounts: { [key: string]: number } = {}
+  const firstNameCounts: { [key: string]: number } = {};
   const firstNames = studentList.map((student) => {
-    const fullName = student.full_name || student.name || ""
-    const parts = fullName.trim().split(/\s+/)
-    const firstName = parts[0]
-    firstNameCounts[firstName] = (firstNameCounts[firstName] || 0) + 1
-    return { ...student, firstName, fullName }
-  })
+    const fullName = student.full_name || student.name || "";
+    const parts = fullName.trim().split(/\s+/);
+    const firstName = parts[0];
+    firstNameCounts[firstName] = (firstNameCounts[firstName] || 0) + 1;
+    return { ...student, firstName, fullName };
+  });
 
   // Process names based on duplicates
   return firstNames.map((student) => {
-    const parts = student.fullName.split(/\s+/)
-    const firstName = parts[0]
+    const parts = student.fullName.split(/\s+/);
+    const firstName = parts[0];
 
     if (firstNameCounts[firstName] > 1 && parts.length > 1) {
       // If duplicate first name exists, add 2 letters from surname
-      const surname = parts[parts.length - 1]
-      const surnameLetters = surname.substring(0, 2).toUpperCase()
+      const surname = parts[parts.length - 1];
+      const surnameLetters = surname.substring(0, 2).toUpperCase();
       return {
         ...student,
         name: `${firstName} ${surnameLetters}`,
-      }
+      };
     } else {
       // Use just first name
       return {
         ...student,
         name: firstName,
-      }
+      };
     }
-  })
-}
+  });
+};
 
 export default function StudentFortuneWheel() {
-  const [students, setStudents] = useState<Student[]>([])
-  const [inputText, setInputText] = useState(defaultStudentNames.join("\n"))
-  const [isSpinning, setIsSpinning] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [showWinnerDialog, setShowWinnerDialog] = useState(false)
-  const [rotation, setRotation] = useState(0)
-  const [className, setClassName] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const wheelRef = useRef<HTMLDivElement>(null)
+  const [students, setStudents] = useState<Student[]>([]);
+  const [inputText, setInputText] = useState(defaultStudentNames.join("\n"));
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [showWinnerDialog, setShowWinnerDialog] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [className, setClassName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const wheelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const lines = inputText.split("\n").filter((line) => line.trim() !== "")
+    const lines = inputText.split("\n").filter((line) => line.trim() !== "");
     const newStudents: Student[] = lines.map((line, index) => ({
       id: `student-${index}`,
       name: line.trim(),
-    }))
-    const processedStudents = processStudentNames(newStudents)
-    setStudents(processedStudents)
-  }, [inputText])
-
+    }));
+    const processedStudents = processStudentNames(newStudents);
+    setStudents(processedStudents);
+  }, [inputText]);
 
   const loadStudentsFromClass = async () => {
-    if (!className.trim()) return
+    if (!className.trim()) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const upperCaseClassName = className.trim().toUpperCase()
-      const response = await fetch(`/api/students?class_name=${encodeURIComponent(upperCaseClassName)}`)
+      const upperCaseClassName = className.trim().toUpperCase();
+      const response = await fetch(
+        `/api/students?class_name=${encodeURIComponent(upperCaseClassName)}`
+      );
       if (response.ok) {
-        const data = await response.json()
-        const classStudents = data.students || []
+        const data = await response.json();
+        const classStudents = data.students || [];
 
         if (Array.isArray(classStudents) && classStudents.length > 0) {
           const newStudentNames = classStudents.map(
-            (student) => student.full_name || student.name || student.toString(),
-          )
-          setInputText(newStudentNames.join("\n"))
+            (student) => student.full_name || student.name || student.toString()
+          );
+          setInputText(newStudentNames.join("\n"));
         }
       } else {
-        console.error("Failed to load students:", response.statusText)
+        console.error("Failed to load students:", response.statusText);
       }
     } catch (error) {
-      console.error("Error loading students:", error)
+      console.error("Error loading students:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     if (!file.name.endsWith(".json") && !file.name.endsWith(".csv")) {
-      alert("Proszę wybrać plik JSON lub CSV")
-      return
+      alert("Proszę wybrać plik JSON lub CSV");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       const response = await fetch("/api/students/", {
         method: "POST",
         body: formData,
-      })
+      });
 
       if (response.ok) {
-        const result = await response.json()
-        console.log("Backend response:", result)
+        const result = await response.json();
+        console.log("Backend response:", result);
 
         if (result.students && Array.isArray(result.students)) {
           const newStudentNames = result.students.map(
-            (student: any) => student.full_name || student.name || student.toString(),
-          )
-          setInputText(newStudentNames.join("\n"))
-          alert(result.message || "Plik został pomyślnie przesłany")
+            (student: any) =>
+              student.full_name || student.name || student.toString()
+          );
+          setInputText(newStudentNames.join("\n"));
+          alert(result.message || "Plik został pomyślnie przesłany");
         }
       } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error("Failed to upload students:", response.statusText, errorData)
-        alert(errorData.detail || "Błąd podczas wysyłania danych do serwera")
+        const errorData = await response.json().catch(() => ({}));
+        console.error(
+          "Failed to upload students:",
+          response.statusText,
+          errorData
+        );
+        alert(errorData.detail || "Błąd podczas wysyłania danych do serwera");
       }
     } catch (error) {
-      console.error("Error processing file:", error)
-      alert("Błąd podczas przetwarzania pliku")
+      console.error("Error processing file:", error);
+      alert("Błąd podczas przetwarzania pliku");
     } finally {
-      setIsLoading(false)
-      event.target.value = ""
+      setIsLoading(false);
+      event.target.value = "";
     }
-  }
+  };
 
   const spinWheel = () => {
-    if (students.length === 0 || students.length === 1) return
+    if (students.length === 0 || students.length === 1) return;
 
-    setIsSpinning(true)
-    setSelectedStudent(null)
-    setShowWinnerDialog(false)
+    setIsSpinning(true);
+    setSelectedStudent(null);
+    setShowWinnerDialog(false);
 
-    const randomRotation = 1440 + Math.random() * 720
-    const newRotation = rotation + randomRotation
-    setRotation(newRotation)
+    const randomRotation = 1440 + Math.random() * 720;
+    const newRotation = rotation + randomRotation;
+    setRotation(newRotation);
 
     setTimeout(() => {
-      const segmentAngle = 360 / students.length
-      const normalizedRotation = newRotation % 360
-      const adjustedRotation = (360 - normalizedRotation + 360) % 360
-      const selectedIndex = Math.floor(adjustedRotation / segmentAngle) % students.length
-      setSelectedStudent(students[selectedIndex])
-      setIsSpinning(false)
-      setShowWinnerDialog(true)
-    }, 3000)
-  }
+      const segmentAngle = 360 / students.length;
+      const normalizedRotation = newRotation % 360;
+      const adjustedRotation = (360 - normalizedRotation + 360) % 360;
+      const selectedIndex =
+        Math.floor(adjustedRotation / segmentAngle) % students.length;
+      setSelectedStudent(students[selectedIndex]);
+      setIsSpinning(false);
+      setShowWinnerDialog(true);
+    }, 3000);
+  };
 
   const resetWheel = () => {
-    setRotation(0)
-    setSelectedStudent(null)
-    setIsSpinning(false)
-    setShowWinnerDialog(false)
-  }
+    setRotation(0);
+    setSelectedStudent(null);
+    setIsSpinning(false);
+    setShowWinnerDialog(false);
+  };
 
-  const segmentAngle = students.length > 0 ? 360 / students.length : 0
+  const segmentAngle = students.length > 0 ? 360 / students.length : 0;
 
   const segmentColors = [
     "#ef4444", // red
@@ -200,14 +214,18 @@ export default function StudentFortuneWheel() {
     "#3b82f6", // blue
     "#8b5cf6", // violet
     "#ec4899", // pink
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Student Selection Wheel</h1>
-          <p className="text-muted-foreground">Click the wheel to randomly select a student!</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Wheel of Fortune
+          </h1>
+          <p className="text-muted-foreground">
+            Click the wheel to randomly select a student!
+          </p>
         </div>
 
         <div className="flex justify-center gap-4 mb-8">
@@ -237,7 +255,9 @@ export default function StudentFortuneWheel() {
                 {/* Wheel */}
                 <div
                   ref={wheelRef}
-                  className={`w-96 h-96 rounded-full border-4 border-foreground relative overflow-hidden cursor-pointer transition-transform ease-out ${isSpinning ? "" : ""}`}
+                  className={`w-96 h-96 rounded-full border-4 border-foreground relative overflow-hidden cursor-pointer transition-transform ease-out ${
+                    isSpinning ? "" : ""
+                  }`}
                   style={{
                     transform: `rotate(${rotation}deg)`,
                     transitionDuration: isSpinning ? "3s" : "0.3s",
@@ -246,45 +266,57 @@ export default function StudentFortuneWheel() {
                 >
                   {students.length === 0 ? (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
-                      <p className="text-muted-foreground text-center px-4 font-medium">Add students to get started!</p>
+                      <p className="text-muted-foreground text-center px-4 font-medium">
+                        Add students to get started!
+                      </p>
                     </div>
                   ) : (
                     <svg className="w-full h-full" viewBox="0 0 200 200">
                       {students.map((student, index) => {
-                        const startAngle = (index * segmentAngle - 90) * (Math.PI / 180) // Start from top
-                        const endAngle = ((index + 1) * segmentAngle - 90) * (Math.PI / 180)
-                        const color = segmentColors[index % segmentColors.length]
+                        const startAngle =
+                          (index * segmentAngle - 90) * (Math.PI / 180); // Start from top
+                        const endAngle =
+                          ((index + 1) * segmentAngle - 90) * (Math.PI / 180);
+                        const color =
+                          segmentColors[index % segmentColors.length];
 
-                        const x1 = 100 + 95 * Math.cos(startAngle)
-                        const y1 = 100 + 95 * Math.sin(startAngle)
-                        const x2 = 100 + 95 * Math.cos(endAngle)
-                        const y2 = 100 + 95 * Math.sin(endAngle)
+                        const x1 = 100 + 95 * Math.cos(startAngle);
+                        const y1 = 100 + 95 * Math.sin(startAngle);
+                        const x2 = 100 + 95 * Math.cos(endAngle);
+                        const y2 = 100 + 95 * Math.sin(endAngle);
 
-                        const largeArcFlag = segmentAngle > 180 ? 1 : 0
+                        const largeArcFlag = segmentAngle > 180 ? 1 : 0;
 
                         const pathData = [
                           `M 100 100`,
                           `L ${x1} ${y1}`,
                           `A 95 95 0 ${largeArcFlag} 1 ${x2} ${y2}`,
                           `Z`,
-                        ].join(" ")
+                        ].join(" ");
 
-                        const textAngle = startAngle + (endAngle - startAngle) / 2
-                        const textRadius = 65
-                        const textX = 100 + textRadius * Math.cos(textAngle)
-                        const textY = 100 + textRadius * Math.sin(textAngle)
+                        const textAngle =
+                          startAngle + (endAngle - startAngle) / 2;
+                        const textRadius = 65;
+                        const textX = 100 + textRadius * Math.cos(textAngle);
+                        const textY = 100 + textRadius * Math.sin(textAngle);
 
-                        const segmentWidth = 2 * Math.PI * textRadius * (segmentAngle / 360)
+                        const segmentWidth =
+                          2 * Math.PI * textRadius * (segmentAngle / 360);
                         let fontSize = Math.min(
                           segmentWidth / (student.name.length * 0.5), // Better ratio for shorter names
                           (segmentAngle / 360) * 35, // Slightly smaller max size
-                          12, // Reduced max font size
-                        )
-                        fontSize = Math.max(fontSize, 7) // Smaller minimum size
+                          12 // Reduced max font size
+                        );
+                        fontSize = Math.max(fontSize, 7); // Smaller minimum size
 
                         return (
                           <g key={student.id}>
-                            <path d={pathData} fill={color} stroke="white" strokeWidth="2" />
+                            <path
+                              d={pathData}
+                              fill={color}
+                              stroke="white"
+                              strokeWidth="2"
+                            />
                             <text
                               x={textX}
                               y={textY}
@@ -300,12 +332,14 @@ export default function StudentFortuneWheel() {
                                 strokeWidth: "1px",
                                 paintOrder: "stroke fill",
                               }}
-                              transform={`rotate(${(textAngle * 180) / Math.PI}, ${textX}, ${textY})`}
+                              transform={`rotate(${
+                                (textAngle * 180) / Math.PI
+                              }, ${textX}, ${textY})`}
                             >
                               {student.name}
                             </text>
                           </g>
-                        )
+                        );
                       })}
                     </svg>
                   )}
@@ -317,13 +351,24 @@ export default function StudentFortuneWheel() {
             <div className="flex gap-4">
               <Button
                 onClick={spinWheel}
-                disabled={isSpinning || students.length === 0 || students.length === 1}
+                disabled={
+                  isSpinning || students.length === 0 || students.length === 1
+                }
                 size="lg"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8"
               >
-                {students.length === 1 ? "Need more students" : isSpinning ? "Spinning..." : "Spin Wheel"}
+                {students.length === 1
+                  ? "Need more students"
+                  : isSpinning
+                  ? "Spinning..."
+                  : "Spin Wheel"}
               </Button>
-              <Button onClick={resetWheel} variant="outline" size="lg" disabled={isSpinning}>
+              <Button
+                onClick={resetWheel}
+                variant="outline"
+                size="lg"
+                disabled={isSpinning}
+              >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
@@ -346,24 +391,33 @@ export default function StudentFortuneWheel() {
                     rows={15}
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    Each line represents one student. Students are added automatically as you type.
+                    Each line represents one student. Students are added
+                    automatically as you type.
                   </p>
                 </div>
 
                 {/* Student Preview */}
                 {students.length > 0 && (
                   <div className="border rounded-lg p-3 bg-muted">
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Current Students:</h4>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                      Current Students:
+                    </h4>
                     <div className="space-y-1">
                       {students.map((student, index) => (
-                        <div key={student.id} className="flex items-center gap-2 text-sm">
+                        <div
+                          key={student.id}
+                          className="flex items-center gap-2 text-sm"
+                        >
                           <div
                             className="w-3 h-3 rounded-full"
                             style={{
-                              backgroundColor: segmentColors[index % segmentColors.length],
+                              backgroundColor:
+                                segmentColors[index % segmentColors.length],
                             }}
                           />
-                          <span className="text-foreground">{student.name}</span>
+                          <span className="text-foreground">
+                            {student.name}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -382,7 +436,10 @@ export default function StudentFortuneWheel() {
             <CardContent>
               <div className="flex gap-4 items-end">
                 <div className="flex-1">
-                  <label htmlFor="class-input" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="class-input"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Class Name
                   </label>
                   <Input
@@ -399,18 +456,21 @@ export default function StudentFortuneWheel() {
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  {isLoading ? "Loading..." : "Załącz"}
+                  {isLoading ? "Loading..." : "Attach"}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Enter a class name and click "Załącz" to load students from the JSON endpoint. Students will replace the
-                current list.
+                Enter a class name and click "Attach" to load students from the
+                JSON endpoint. Students will replace the current list.
               </p>
 
               <div className="mt-6 pt-6 border-t border-border">
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <label htmlFor="json-upload" className="block text-sm font-medium text-foreground mb-2">
+                    <label
+                      htmlFor="json-upload"
+                      className="block text-sm font-medium text-foreground mb-2"
+                    >
                       Upload Student File
                     </label>
                     <div className="relative">
@@ -423,20 +483,23 @@ export default function StudentFortuneWheel() {
                         className="hidden"
                       />
                       <Button
-                        onClick={() => document.getElementById("json-upload")?.click()}
+                        onClick={() =>
+                          document.getElementById("json-upload")?.click()
+                        }
                         disabled={isLoading}
                         variant="outline"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        {isLoading ? "Uploading..." : "Wybierz plik JSON/CSV"}
+                        {isLoading ? "Uploading..." : "Choose JSON/CSV file"}
                       </Button>
                     </div>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Select a JSON or CSV file with student data. The backend will normalize the data and handle both
-                  Polish and English field names (imie/nazwisko, full_name, klasa/class_name).
+                  Select a JSON or CSV file with student data. The backend will
+                  normalize the data and handle both Polish and English field
+                  names (first name/last name, full_name, class_name).
                 </p>
               </div>
             </CardContent>
@@ -450,24 +513,28 @@ export default function StudentFortuneWheel() {
           <DialogHeader>
             <DialogTitle className="text-center text-2xl font-bold text-primary flex items-center justify-center gap-2">
               <PartyPopper className="w-8 h-8 text-yellow-500 mx-auto mb-4" />
-              Wygrał!
+              Winner!
             </DialogTitle>
           </DialogHeader>
           <div className="text-center py-6">
             <div className="mb-4">
               <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
             </div>
-            <h3 className="text-3xl font-bold text-foreground mb-4">{selectedStudent?.name}</h3>
-            <p className="text-lg text-muted-foreground mb-6">Gratulacje! 🎉</p>
+            <h3 className="text-3xl font-bold text-foreground mb-4">
+              {selectedStudent?.name}
+            </h3>
+            <p className="text-lg text-muted-foreground mb-6">
+              Congratulations! 🎉
+            </p>
             <Button
               onClick={() => setShowWinnerDialog(false)}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
             >
-              Zamknij
+              Close
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

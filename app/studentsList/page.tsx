@@ -72,20 +72,18 @@ export default function StudentQueue() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Playlista{" "}
-          </h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Playlist</h1>
         </div>
 
         <div className="flex justify-center gap-4 mb-8">
           <Link href="/studentsList">
             <Button variant="outline" className="px-6">
-              Lista uczniów
+              Playlist
             </Button>
           </Link>
           <Link href="/">
             <Button className="px-6 bg-blue-600 text-white hover:bg-blue-700">
-              Koło fortuny
+              Wheel of Fortune
             </Button>
           </Link>
         </div>
@@ -95,13 +93,13 @@ export default function StudentQueue() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
-                Dodaj ucznia do playlisty
+                Add student to playlist
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Imię i nazwisko ucznia"
+                  placeholder="Student full name"
                   value={newStudentName}
                   onChange={(e) => setNewStudentName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addStudent()}
@@ -115,7 +113,7 @@ export default function StudentQueue() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Panel sterowania następnym</CardTitle>
+              <CardTitle>Next student panel</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {nextStudent ? (
@@ -123,7 +121,7 @@ export default function StudentQueue() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Następny uczeń:
+                        Next student:
                       </p>
                       <p className="text-lg font-bold text-foreground">
                         {nextStudent.name}
@@ -145,7 +143,7 @@ export default function StudentQueue() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Brak uczniów w kolejce
+                  No students in queue
                 </div>
               )}
             </CardContent>
@@ -156,17 +154,17 @@ export default function StudentQueue() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Playlista (kolejka)</span>
+                <span>Playlist (queue)</span>
                 <Badge variant="secondary">
-                  {queue.length} {queue.length === 1 ? "uczeń" : "uczniów"}
+                  {queue.length} {queue.length === 1 ? "student" : "students"}
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {queue.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>Brak uczniów na liście</p>
-                  <p className="text-sm">Dodaj pierwszego ucznia powyżej</p>
+                  <p>No students on the list</p>
+                  <p className="text-sm">Add the first student above</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -191,7 +189,7 @@ export default function StudentQueue() {
                         </span>
                         {index === 0 && (
                           <Badge className="bg-blue-600 hover:bg-blue-700 text-white">
-                            Następny
+                            Next
                           </Badge>
                         )}
                       </div>
@@ -201,7 +199,7 @@ export default function StudentQueue() {
                           size="sm"
                           variant="ghost"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          title="Usuń ucznia"
+                          title="Remove student"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -215,12 +213,12 @@ export default function StudentQueue() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Ci, którzy już byli</CardTitle>
+              <CardTitle>Already went</CardTitle>
             </CardHeader>
             <CardContent>
               {history.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Jeszcze nikt nie dostał plusa
+                  No one has received a plus yet
                 </div>
               ) : (
                 <div className="space-y-2">
